@@ -29,11 +29,12 @@ public class GoogleOAuthController {
             if (userBody.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Google Code");
             }
-            boolean isNewUser = googleAuthService.checkUserOnDB(userBody);
+            String isNewUser = googleAuthService.checkUserOnDB(userBody);
             Map<String, String> response = new HashMap<>();
             response.put("access_token", (String) userBody.get("access_token"));
             response.put("email", (String) userBody.get("email"));
-            response.put("status", isNewUser ? "Register Successful." : "Login Successful.");
+            response.put("DATA_TRNASFER_JWT_TOKEN", isNewUser);
+            response.put("status", isNewUser != null ? "Register Successful." : "Login Successful.");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Authentication Error", e);

@@ -2,6 +2,8 @@ package com.togo.restapi.Services.LoginService.Google;
 
 import com.togo.restapi.Entity.UserEntity.User;
 import com.togo.restapi.Repository.MongoRepo.UserDetailsImlRepo;
+import com.togo.restapi.Services.UserCreateService.UserCreateServiceSys;
+import com.togo.restapi.components.ParsePhone;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +49,8 @@ public class GoogleAuthService {
     private final MongoTemplate mongoTemplate;
     private final JavaMailSender javaMailSender;
     private final UserDetailsImlRepo userDetailsImlRepo;
+    private final UserCreateServiceSys userService;
+    private final ParsePhone parsePhone;
     private static final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public Map<String, Object> authenticateUser(String code) {
@@ -63,32 +67,38 @@ public class GoogleAuthService {
             // ✅ FIX: You MUST wrap the params AND headers into an HttpEntity
             HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(param, headers);
             // ✅ FIX: Pass the requestEntity instead of just 'param'
-            var response = restTemplate.postForObject(tokenEndPoint, requestEntity, Map.class);
-            if (response == null || response.get("access_token") == null) {
-                log.error("Google response: {}", response); // Log this to see what Google actually sent
+            try {
+                var response = restTemplate.postForObject(tokenEndPoint, requestEntity, Map.class);
+                if (response == null || response.get("access_token") == null) {
+                    log.error("Google response: {}", response); // Log this to see what Google actually sent
+                    return Collections.emptyMap();
+                }
+                String accessToken = (String) response.get("access_token");
+                // Now proceed to get User Info
+                HttpHeaders authHeaders = new HttpHeaders();
+                authHeaders.setBearerAuth(accessToken);
+                HttpEntity<String> userInfoEntity = new HttpEntity<>(authHeaders);
+
+                var userProfile = restTemplate.exchange(userInfo, HttpMethod.GET, userInfoEntity, Map.class).getBody();
+                assert userProfile != null;
+                if (!userProfile.isEmpty()){
+                    userProfile.put("access_token", accessToken);
+                }
+                return userProfile;
+            }catch (Exception e){
+                e.printStackTrace();
                 return Collections.emptyMap();
             }
-            String accessToken = (String) response.get("access_token");
-            // Now proceed to get User Info
-            HttpHeaders authHeaders = new HttpHeaders();
-            authHeaders.setBearerAuth(accessToken);
-            HttpEntity<String> userInfoEntity = new HttpEntity<>(authHeaders);
 
-            var userProfile = restTemplate.exchange(userInfo, HttpMethod.GET, userInfoEntity, Map.class).getBody();
-            assert userProfile != null;
-            if (!userProfile.isEmpty()){
-                userProfile.put("access_token", accessToken);
-            }
-            return userProfile;
         } catch (Exception e) {
             log.error("Can't authenticate user!", e);
             return Collections.emptyMap();
         }
     }
 
-    public boolean checkUserOnDB(Map<String, Object> userObj) {
+    public String checkUserOnDB(Map<String, Object> userObj) {
         if (userObj == null || userObj.isEmpty()) {
-            return false;
+            return null;
         }
         String email = (String) userObj.get("email");
         // 1. Look for the user by email
@@ -109,6 +119,15 @@ public class GoogleAuthService {
             }else {
                 saveUser.setLastName((String) userObj.get("family_name"));
             }
+            if (userObj.get("phone_number") == null){
+                saveUser.setPhoneNumber("No_Number");
+                saveUser.setNumCountryCode("No_CC");
+            }else {
+                String fullNbr = (String) userObj.get("phone_number");
+                Map<String, String> stringStringMap = parsePhone.parsePhone(fullNbr);
+                saveUser.setPhoneNumber(stringStringMap.get("number"));
+                saveUser.setNumCountryCode(stringStringMap.get("countryCode"));
+            }
             saveUser.setUsername(String.valueOf(UUID.randomUUID()));
             saveUser.setEmail(email);
             saveUser.setRole(Collections.singletonList("user"));
@@ -116,11 +135,12 @@ public class GoogleAuthService {
             randomPassword = UUID.randomUUID().toString();
             saveUser.setPassword(passwordEncoder.encode(randomPassword));
             sendPasswordToMail(email, randomPassword);
-            userDetailsImlRepo.save(saveUser);
-            return true; // Successfully registered new user
+            User save = userDetailsImlRepo.save(saveUser);
+            return userService.createJwtNewUser(save.getId(), save.getEmail());
+            // Successfully registered new user
         }
         // 3. User already exists in DB
-        return false;
+        return null;
     }
     public void sendPasswordToMail(String email, String password){
         SimpleMailMessage mailMessage = new SimpleMailMessage();

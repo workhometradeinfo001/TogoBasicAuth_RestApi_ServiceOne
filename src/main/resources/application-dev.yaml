@@ -1,0 +1,5 @@
+server:
+  port: 8081
+  ssl:
+    enabled: false
+jwt_secret: ${JWT_SECRET_CODE}

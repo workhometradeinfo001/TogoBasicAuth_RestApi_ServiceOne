@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-@Document("togo_user_database")
+@Document(collection = "togo_user_database")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -34,11 +34,6 @@ public class User {
         @NonNull
         @Indexed(unique = true)
         private String numCountryCode;
-        private Map<String, Object> group;
-        private Map<String, Object> fndList;
-        private Map<String, Object> pageList;
-        private Map<String, Object> chatList;
-        private Map<String, Object> notificationList;
 
         private List<String> role;
 

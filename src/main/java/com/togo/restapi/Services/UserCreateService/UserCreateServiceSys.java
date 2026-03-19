@@ -3,28 +3,30 @@ package com.togo.restapi.Services.UserCreateService;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.togo.restapi.DTO.RegisterDTO.CheckCountryPhNumbr;
 import com.togo.restapi.DTO.RegisterDTO.CheckEmailForRegister;
 import com.togo.restapi.DTO.RegisterDTO.UserDto;
 import com.togo.restapi.Entity.UserEntity.User;
 import com.togo.restapi.Repository.MongoRepo.UserDetailsImlRepo;
 import com.togo.restapi.Services.RedisService.RedisService;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.*;
 
@@ -33,6 +35,8 @@ import java.util.*;
 @Slf4j
 public class UserCreateServiceSys {
 
+    @Value("${jwt_secret}")
+    private String signWithSecret;
     private final UserDetailsImlRepo userDetailsImlRepo;
     private final JavaMailSender javaMailSender;
     private final RedisService<String> redisService;
@@ -41,10 +45,11 @@ public class UserCreateServiceSys {
     private final SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
     private final MongoTemplate mongoTemplate;
     private String confirmCode;
+    private final JdbcTemplate jdbcTemplate;
     private final SecureRandom secureRandom = new SecureRandom();
 
 
-    public User createNewUserOnDatabase(UserDto userDto){
+    public Optional<String> createNewUserOnDatabase(UserDto userDto){
         User user = new User();
         try{
             user.setFirstName(userDto.getFirstName());
@@ -54,19 +59,35 @@ public class UserCreateServiceSys {
             user.setPhoneNumber(userDto.getPhoneNumber());
             user.setEmail(userDto.getEmail());
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-            user.setGroup(userDto.getGroup());
-            user.setPageList(userDto.getPageList());
-            user.setFndList(userDto.getFndList());
-            user.setChatList(userDto.getChatList());
-            user.setNotificationList(userDto.getNotificationList());
             user.setRole(Collections.singletonList("user"));
             @NonNull String collection = "user_"+userDto.getNumCountryCode();
             userDetailsImlRepo.save(user);
-            return mongoTemplate.save(user, collection);
+            return saveAndCreateJWT(user, collection);
         } catch (Exception e) {
             log.error("Something wrong! Check your details.", e);
         }
-        return null;
+        return Optional.empty();
+    }
+    private Optional<String> saveAndCreateJWT(User user, String collection){
+        try {
+            User save = mongoTemplate.save(user, collection);
+            return Optional.of(createJwtNewUser(save.getId(), save.getEmail()));
+        }catch (Exception e){
+            return Optional.empty();
+        }
+    }
+    public String createJwtNewUser(String mongoId, String email){
+        SecretKey key = Keys.hmacShaKeyFor(signWithSecret.getBytes(StandardCharsets.UTF_8));
+        return Jwts.builder()
+                .header()
+                .add("typ", "DATA_TRANSFER_JWT")
+                .and()
+                .subject(email)
+                .claim("mongoUserId", mongoId)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis()+86400000))
+                .signWith(key)
+                .compact();
     }
     public void generateRandomCode(String emailLen){
         int num = emailLen.length();
@@ -109,20 +130,45 @@ public class UserCreateServiceSys {
         return code.equals(confirmCode);
     }
 
-    public boolean checkLoginCredential(String email, String password){
+    public Map<String, String> checkLoginCredential(String email, String password){
         if (email.isEmpty() || password.isEmpty()){
-            return false;
+            return new HashMap<>();
         }else {
             Query query = new Query();
             query.addCriteria(Criteria.where("email").is(email));
             List<User> user = mongoTemplate.find(query, User.class);
-            if (user.isEmpty()){
-                return false;
-            }else {
-                String hashPass = user.get(0).getPassword();
-                return passwordEncoder.matches(password, hashPass);
+            if (!user.isEmpty()) {
+                String hashPass = user.getFirst().getPassword();
+                boolean matches = passwordEncoder.matches(password, hashPass);
+                if (matches) {
+                    String findIdViaEmail = "select user_id from user_emails_table where email= ?";
+                    Long userId = jdbcTemplate.queryForObject(findIdViaEmail, Long.class, email);
+                    if (userId != null) {
+                        String jwt = createJwtLogin(userId, email);
+                        Map<String, String> map = new HashMap<>();
+                        map.put("token", jwt);
+                        return map;
+                    }
+                    return new HashMap<>();
+                }
+                return new HashMap<>();
             }
+            return new HashMap<>();
         }
+    }
+    //Based on Mysql UserId.
+    public String createJwtLogin(Long id, String email) {
+        SecretKey key = Keys.hmacShaKeyFor(signWithSecret.getBytes(StandardCharsets.UTF_8));
+        return Jwts.builder()
+                .header()
+                .add("typ", "LOGIN_JWT") // Use 'typ'
+                .and()
+                .subject(email)
+                .claim("userId", id)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 86400000)) // 24 hours
+                .signWith(key) // Ensure 'key' is a SecretKey object, not a String
+                .compact();
     }
 
     public List<User> checkPhnNumber(CheckCountryPhNumbr dto) throws NumberParseException {

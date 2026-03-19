@@ -9,9 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -22,17 +20,10 @@ public class RegisterAccountController {
     private final UserCreateServiceSys userCreateServiceSys;
 
     @PostMapping("create-account")
-    public ResponseEntity<UserDto> createAccountWithDetails(@RequestBody UserDto userDto){
-        try{
-            User newUserOnDatabase = userCreateServiceSys.createNewUserOnDatabase(userDto);
-            if (newUserOnDatabase != null){
-                return new ResponseEntity<>(HttpStatus.CREATED);
-            }else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e);
-        }
+    public ResponseEntity<?> createAccountWithDetails(@RequestBody UserDto userDto){
+        return userCreateServiceSys.createNewUserOnDatabase(userDto)
+                .map(token -> ResponseEntity.status(HttpStatus.CREATED).body(token)) // Extract the String
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
     @PostMapping("/verifyEmail")
     public ResponseEntity<CheckEmailForRegister> emailVerification(@RequestBody CheckEmailForRegister emailCheck){
@@ -81,16 +72,20 @@ public class RegisterAccountController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<HttpStatus> loginMethod(@RequestBody LoginDTO loginDTO){
+    public Map<String, String> loginMethod(@RequestBody LoginDTO loginDTO){
         try {
-            boolean loginResponse = userCreateServiceSys.checkLoginCredential(loginDTO.getEmail(), loginDTO.getPassword());
-            if (loginResponse){
-                return new ResponseEntity<>(HttpStatus.FOUND);
+            Map<String, String> loginResponse = userCreateServiceSys.checkLoginCredential(loginDTO.getEmail(), loginDTO.getPassword());
+            if (!loginResponse.isEmpty()){
+                loginResponse.put("Http", "302");
+                return loginResponse;
             }
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            loginResponse.put("Http", "404");
+            return loginResponse;
         }catch (Exception e){
             log.error("Something wrong?{}", String.valueOf(e));
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            Map<String, String> map = new HashMap<>();
+            map.put("Http", "500");
+            return map;
         }
     }
 

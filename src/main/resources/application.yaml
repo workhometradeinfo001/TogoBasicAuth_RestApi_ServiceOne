@@ -1,6 +1,8 @@
 spring:
   application:
     name: TogoApi
+  profiles:
+    active: mysql, dev
   data:
     mongodb:
       uri: ${MONGODB_URI}
@@ -30,15 +32,10 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
 
-server:
-  port: 8080
-  ssl:
-    enabled: false
-
 googleOAuth:
   clientId: ${GOOGLE_CLIENT_ID}
   clientSecret: ${GOOGLE_CLIENT_SECRET}
-  redirectApi: https://www.googleapis.com/auth/userinfo.email
   tokenEndPoint: https://oauth2.googleapis.com/token
   userInfoUrl: https://www.googleapis.com/oauth2/v3/userinfo
-  redirectUri: postmessage
+  # This MUST match what you used to get the code
+  redirectUri: https://developers.google.com/oauthplayground
