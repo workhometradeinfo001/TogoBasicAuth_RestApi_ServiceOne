@@ -77,6 +77,7 @@ public class RegisterAccountController {
             Map<String, String> loginResponse = userCreateServiceSys.checkLoginCredential(loginDTO.getEmail(), loginDTO.getPassword());
             if (!loginResponse.isEmpty()){
                 loginResponse.put("Http", "302");
+                System.out.println(loginResponse);
                 return loginResponse;
             }
             loginResponse.put("Http", "404");

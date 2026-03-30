@@ -32,7 +32,6 @@ public class User {
         @NonNull
         private String phoneNumber;
         @NonNull
-        @Indexed(unique = true)
         private String numCountryCode;
 
         private List<String> role;

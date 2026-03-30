@@ -48,7 +48,6 @@ public class UserCreateServiceSys {
     private final JdbcTemplate jdbcTemplate;
     private final SecureRandom secureRandom = new SecureRandom();
 
-
     public Optional<String> createNewUserOnDatabase(UserDto userDto){
         User user = new User();
         try{
@@ -61,8 +60,8 @@ public class UserCreateServiceSys {
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
             user.setRole(Collections.singletonList("user"));
             @NonNull String collection = "user_"+userDto.getNumCountryCode();
-            userDetailsImlRepo.save(user);
-            return saveAndCreateJWT(user, collection);
+            User save = userDetailsImlRepo.save(user);
+            return saveAndCreateJWT(save, collection);
         } catch (Exception e) {
             log.error("Something wrong! Check your details.", e);
         }

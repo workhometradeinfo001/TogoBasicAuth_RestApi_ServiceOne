@@ -24,13 +24,13 @@ spring:
           auth: true
           starttls:
             enable: true
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
+#  security:
+#    oauth2:
+#      client:
+#        registration:
+#          google:
+#            client-id: ${GOOGLE_CLIENT_ID}
+#            client-secret: ${GOOGLE_CLIENT_SECRET}
 
 googleOAuth:
   clientId: ${GOOGLE_CLIENT_ID}
@@ -38,4 +38,9 @@ googleOAuth:
   tokenEndPoint: https://oauth2.googleapis.com/token
   userInfoUrl: https://www.googleapis.com/oauth2/v3/userinfo
   # This MUST match what you used to get the code
+<<<<<<< HEAD
   redirectUri: https://developers.google.com/oauthplayground
+=======
+#  redirectUri: ${REDIRECT_URI_GOOGLE}
+  redirectUri: http://localhost:8081/login/oauth2/code/google
+>>>>>>> f0c5089 (Basic auth 0.0.0.0.1)

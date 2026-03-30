@@ -62,7 +62,7 @@ public class GoogleAuthService {
             param.add("code", code);
             param.add("client_id", clientID);
             param.add("client_secret", clientSecret);
-            param.add("redirect_uri", redirectUri);
+            param.add("redirect_uri", "postmessage");
             param.add("grant_type", "authorization_code");
             // ✅ FIX: You MUST wrap the params AND headers into an HttpEntity
             HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(param, headers);
