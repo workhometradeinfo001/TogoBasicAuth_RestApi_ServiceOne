@@ -4,14 +4,18 @@ import com.togo.restapi.DTO.LoginDTO.GoogleAuthToken;
 import com.togo.restapi.Services.LoginService.Google.GoogleAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,6 +25,7 @@ import java.util.Map;
 public class GoogleOAuthController {
 
     private final GoogleAuthService googleAuthService;
+    private final MongoTemplate mongoTemplate;
 
     @PostMapping
     public ResponseEntity<Object> googleAuth(@RequestBody GoogleAuthToken googleAuthToken){
@@ -33,6 +38,7 @@ public class GoogleOAuthController {
             Map<String, String> response = new HashMap<>();
             response.put("access_token", (String) userBody.get("access_token"));
             response.put("email", (String) userBody.get("email"));
+            response.put("refresh_token", "exists");
             response.put("DATA_TRNASFER_JWT_TOKEN", isNewUser);
             response.put("status", isNewUser != null ? "Register Successful." : "Login Successful.");
             return ResponseEntity.ok(response);

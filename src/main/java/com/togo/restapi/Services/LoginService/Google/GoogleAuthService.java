@@ -6,12 +6,15 @@ import com.togo.restapi.Services.UserCreateService.UserCreateServiceSys;
 import com.togo.restapi.components.ParsePhone;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -44,6 +47,8 @@ public class GoogleAuthService {
     @Value("${googleOAuth.redirectUri}")
     private String redirectUri;
     private String randomPassword;
+    private static final String REFRESH_TOKEN_TEXT = "refresh_token";
+    private static final String ACCESS_TOKEN_TEXT = "access_token";
 
     private final RestTemplate restTemplate;
     private final MongoTemplate mongoTemplate;
@@ -69,12 +74,13 @@ public class GoogleAuthService {
             // ✅ FIX: Pass the requestEntity instead of just 'param'
             try {
                 var response = restTemplate.postForObject(tokenEndPoint, requestEntity, Map.class);
-                if (response == null || response.get("access_token") == null) {
+                if (response == null || response.get(ACCESS_TOKEN_TEXT) == null) {
                     log.error("Google response: {}", response); // Log this to see what Google actually sent
                     return Collections.emptyMap();
                 }
-                String accessToken = (String) response.get("access_token");
-                // Now proceed to get User Info
+                String accessToken = (String) response.get(ACCESS_TOKEN_TEXT);
+                String refreshToken = (String) response.get(REFRESH_TOKEN_TEXT);
+                // Now proceed to get User
                 HttpHeaders authHeaders = new HttpHeaders();
                 authHeaders.setBearerAuth(accessToken);
                 HttpEntity<String> userInfoEntity = new HttpEntity<>(authHeaders);
@@ -82,7 +88,12 @@ public class GoogleAuthService {
                 var userProfile = restTemplate.exchange(userInfo, HttpMethod.GET, userInfoEntity, Map.class).getBody();
                 assert userProfile != null;
                 if (!userProfile.isEmpty()){
-                    userProfile.put("access_token", accessToken);
+                    userProfile.put(ACCESS_TOKEN_TEXT, accessToken);
+                    Query query = new Query(Criteria.where("email").is(userProfile.get("email")));
+                    Update update = new Update();
+                    update.set(REFRESH_TOKEN_TEXT, refreshToken);
+                    update.set("last_login", new Date());
+                    mongoTemplate.upsert(query, update, "refresh_token");
                 }
                 return userProfile;
             }catch (Exception e){

@@ -1,21 +1,10 @@
 spring:
   datasource:
-<<<<<<< HEAD
-    url: jdbc:mysql://localhost:3306/togo_db
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
-=======
-    # Use your NLB Public IP here
-    url: jdbc:mysql://80.225.210.74:3306/togo_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: ${ODB_SOURCE}
     username: ${ODB_NAME}
     password: ${ODB_OFFICIAL_DB}
-#    url: jdbc:mysql://localhost:3307/togo_db
-#    username: root
-#    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
->>>>>>> f0c5089 (Basic auth 0.0.0.0.1)
