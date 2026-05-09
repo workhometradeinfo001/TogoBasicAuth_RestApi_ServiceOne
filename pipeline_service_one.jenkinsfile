@@ -3,6 +3,20 @@ pipeline{
     tools {
         maven 'Maven'
     }
+    environment {
+        MONGODB_URI = "${env.JENKINS_MONGODB_URI}"
+        MONGODB_DB = "${env.JENKINS_MONGODB_DB}"
+        REDIS_HOST = "${env.JENKINS_REDIS_HOST}"
+        REDIS_PORT = "${env.JENKINS_REDIS_PORT}"
+        REDIS_PASSWORD = "${env.JENKINS_REDIS_PASSWORD}"
+        MAIL_USERNAME = "${env.JENKINS_MAIL_USERNAME}"
+        MAIL_PASSWORD = "${env.JENKINS_MAIL_PASSWORD}"
+        GOOGLE_CLIENT_ID = "${env.JENKINS_GOOGLE_CLIENT_ID}"
+        GOOGLE_CLIENT_SECRET = "${env.JENKINS_GOOGLE_CLIENT_SECRET}"
+        JWT_SECRET_CODE = "${env.JENKINS_JWT_SECRET_CODE}"
+        ODB_NAME = "${env.JENKINS_ODB_NAME}"
+        ODB_OFFICIAL_DB = "${env.JENKINS_ODB_OFFICIAL_DB}"
+    }
     stages{
         stage("Test Gitbub code"){
             steps{

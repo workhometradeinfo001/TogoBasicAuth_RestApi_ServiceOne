@@ -2,12 +2,10 @@ package com.togo.restapi.Services.UserCreateService;
 
 import com.togo.restapi.Entity.UserEntity.User;
 import com.togo.restapi.Services.RedisService.RedisService;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.mail.MailMessage;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -64,8 +62,9 @@ public class ServiceForgetPass {
         if (user.isEmpty()){
             return false;
         }else {
-            User particularUser = user.get(0);
+            User particularUser = user.getFirst();
             particularUser.setPassword(passwordEncoder.encode(password));
+            mongoTemplate.save(particularUser);
             return true;
         }
     }
