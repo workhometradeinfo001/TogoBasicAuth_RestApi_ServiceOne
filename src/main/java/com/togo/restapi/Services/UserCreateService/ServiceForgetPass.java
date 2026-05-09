@@ -30,7 +30,7 @@ public class ServiceForgetPass {
 
     public boolean sentCodeForPass(String email){
         for (int i = 0; i<6; i++){
-            sixDigitCode += random.nextInt(10);
+            sixDigitCode = sixDigitCode + random.nextInt(10);
         }
         if (!sixDigitCode.isEmpty()){
             SimpleMailMessage ms = new SimpleMailMessage();
