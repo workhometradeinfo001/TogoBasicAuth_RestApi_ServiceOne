@@ -1,0 +1,72 @@
+pipeline{
+    agent any
+    tools {
+        maven 'Maven'
+    }
+    stages{
+        stage("Test Gitbub code"){
+            steps{
+                sh "mvn clean test"
+            }
+            post{
+                always{
+                    echo "========always========"
+                }
+                success{
+                    echo "========Successfull mvn Test.========"
+                }
+                failure{
+                    echo "========Failed mvn Test.========"
+                }
+            }
+        }
+        stage("Build Jar"){
+            steps{
+                sh '''mvn clean package
+                ls
+                pwd
+                '''
+            }
+            post{
+                always{
+                    echo "====++++always++++===="
+                }
+                success{
+                    echo "====++++Successful build jar.++++===="
+                }
+                failure{
+                    echo "====++++Failed build jar.++++===="
+                }
+            }
+        }
+        stage("Test Code Quality"){
+            steps{
+                withSonarQubeEnv("SonarQubeServer"){
+                    sh "mvn sonar:sonar"
+                }
+            }
+            post{
+                always{
+                    echo "====++++always++++===="
+                }
+                success{
+                    echo "====++++Successful check sonarqube++++===="
+                }
+                failure{
+                    echo "====++++Failed sonarqube check++++===="
+                }
+            }
+        }
+    }
+    post{
+        always{
+            echo "========always Check Post========"
+        }
+        success{
+            echo "========pipeline executed successfully ========"
+        }
+        failure{
+            echo "========pipeline execution failed========"
+        }
+    }
+}
