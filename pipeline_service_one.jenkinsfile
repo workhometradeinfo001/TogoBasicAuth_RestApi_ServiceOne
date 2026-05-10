@@ -17,7 +17,7 @@ pipeline{
         ODB_NAME = "${env.JENKINS_ODB_NAME}"
         ODB_OFFICIAL_DB = "${env.JENKINS_ODB_OFFICIAL_DB}"
         ODB_SOURCE = "${env.JENKINS_ODB_SOURCE}"
-        SONAR_TOKEN = credentials("SONAR_TOKEN")
+        SONAR_TOKEN = "${env.SONAR_TOKEN}"
     }
     stages{
         stage("Print ENV Variables"){
