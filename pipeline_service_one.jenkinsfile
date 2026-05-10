@@ -24,16 +24,16 @@ pipeline{
     stages{
         stage("Print ENV Variables"){
             steps{
-                echo "JENKINS_REDIS_HOST"
-                echo "JENKINS_MONGODB_URI"
-                echo "JENKINS_MONGODB_DB"
-                echo "JENKINS_GOOGLE_CLIENT_SECRET"
-                echo "JENKINS_GOOGLE_CLIENT_ID"
-                echo "JENKINS_JWT_SECRET_CODE"
-                echo "JENKINS_ODB_NAME"
-                echo "JENKINS_ODB_OFFICIAL_DB"
-                echo "JENKINS_ODB_SOURCE"
-                echo "SONAR_TOKEN"
+                echo "env.JENKINS_REDIS_HOST"
+                echo "env.JENKINS_MONGODB_URI"
+                echo "env.JENKINS_MONGODB_DB"
+                echo "env.JENKINS_GOOGLE_CLIENT_SECRET"
+                echo "env.JENKINS_GOOGLE_CLIENT_ID"
+                echo "env.JENKINS_JWT_SECRET_CODE"
+                echo "env.JENKINS_ODB_NAME"
+                echo "env.JENKINS_ODB_OFFICIAL_DB"
+                echo "env.JENKINS_ODB_SOURCE"
+                echo "env.SONAR_TOKEN"
             }
             post{
                 always{
