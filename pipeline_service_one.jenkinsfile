@@ -23,6 +23,11 @@ pipeline{
             steps{
                 sh "printenv"
             }
+            post{
+                failure{
+                    "Env Print failure...."
+                }
+            }
         }
         stage("Test Gitbub code"){
             steps{
