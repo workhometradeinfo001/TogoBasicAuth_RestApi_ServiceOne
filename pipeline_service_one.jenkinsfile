@@ -25,7 +25,7 @@ pipeline{
             }
             post{
                 failure{
-                    "Env Print failure...."
+                   echo "Env Print failure...."
                 }
             }
         }
