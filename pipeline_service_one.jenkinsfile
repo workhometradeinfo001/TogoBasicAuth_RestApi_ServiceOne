@@ -16,6 +16,7 @@ pipeline{
         JWT_SECRET_CODE = "${env.JENKINS_JWT_SECRET_CODE}"
         ODB_NAME = "${env.JENKINS_ODB_NAME}"
         ODB_OFFICIAL_DB = "${env.JENKINS_ODB_OFFICIAL_DB}"
+        ODB_SOURCE = "${env.JENKINS_ODB_SOURCE}"
     }
     stages{
         stage("Test Gitbub code"){
