@@ -1,8 +1,15 @@
 spring:
   application:
     name: TogoApi
-  profiles:
-    active: mysql, dev
+  datasource:
+    url: ${ODB_SOURCE}
+    username: ${ODB_NAME}
+    password: ${ODB_OFFICIAL_DB}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
   data:
     mongodb:
       uri: ${MONGODB_URI}
