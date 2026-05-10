@@ -19,6 +19,11 @@ pipeline{
         ODB_SOURCE = "${env.JENKINS_ODB_SOURCE}"
     }
     stages{
+        stage("Print ENV Variables"){
+            steps{
+                sh "printenv"
+            }
+        }
         stage("Test Gitbub code"){
             steps{
                 sh "mvn clean test"
