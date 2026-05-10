@@ -17,6 +17,7 @@ pipeline{
         ODB_NAME = "${env.JENKINS_ODB_NAME}"
         ODB_OFFICIAL_DB = "${env.JENKINS_ODB_OFFICIAL_DB}"
         ODB_SOURCE = "${env.JENKINS_ODB_SOURCE}"
+        SONAR_TOKEN = credentials("SONAR_TOKEN")
     }
     stages{
         stage("Print ENV Variables"){
@@ -24,6 +25,12 @@ pipeline{
                 sh "printenv"
             }
             post{
+                always{
+                    echo "Print Always ..."
+                }
+                success{
+                    echo "Print Env Successful"
+                }
                 failure{
                    echo "Env Print failure...."
                 }
@@ -67,7 +74,13 @@ pipeline{
         stage("Test Code Quality"){
             steps{
                 withSonarQubeEnv("SonarQubeServer"){
-                    sh "mvn sonar:sonar"
+                    sh """
+                        mvn verify sonar:sonar \
+                        -Dsonar.projectKey=your_project_key \
+                        -Dsonar.organization=your_org_key \
+                        -Dsonar.host.url=https://sonarcloud.io \
+                        -Dsonar.login=${SONAR_TOKEN}
+                    """
                 }
             }
             post{
