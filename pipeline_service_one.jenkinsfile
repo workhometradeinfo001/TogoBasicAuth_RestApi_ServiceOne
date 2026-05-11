@@ -74,6 +74,18 @@ pipeline {
                 failure { echo "====++++Failed sonarqube check++++====" }
             }
         }
+        stage("Run the jar"){
+            steps{
+                // sh "java -jar /var/lib/jenkins/workspace/service_one_restapi_pipeline/target/restapi-0.0.1-SNAPSHOT.jar"
+                // Start the app in the background and redirect logs
+                sh "nohup java -jar /var/lib/jenkins/workspace/service_one_restapi_pipeline/target/restapi-0.0.1-SNAPSHOT.jar > app.log 2>&1 &"
+            }
+            post{
+                always{echo "======Always======"}
+                success{echo "=====Run jar Successful======"}
+                failure{echo "=======Run jar Failed========"}
+            }
+        }
     } // End of Stages
 
     post {
