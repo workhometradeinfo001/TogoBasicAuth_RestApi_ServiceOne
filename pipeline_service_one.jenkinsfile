@@ -20,6 +20,7 @@ pipeline {
         SONAR_TOKEN = "${env.SONAR_TOKEN}"
         SONAR_ORG_KEY = "${env.SONAR_ORG_KEY}"
         SONAR_PRO_KEY = "${env.SONAR_PRO_KEY}"
+        JAR_FILE_FROM_JENKINS = "${env.JAR_FILE_FROM_JENKINS}"
     }
     stages {
         stage("Print ENV Variables") {
@@ -74,16 +75,14 @@ pipeline {
                 failure { echo "====++++Failed sonarqube check++++====" }
             }
         }
-        stage("Run the jar"){
+        stage("Build Docker Image with jar"){
             steps{
-                // sh "java -jar /var/lib/jenkins/workspace/service_one_restapi_pipeline/target/restapi-0.0.1-SNAPSHOT.jar"
-                // Start the app in the background and redirect logs
-                sh "nohup java -jar /var/lib/jenkins/workspace/service_one_restapi_pipeline/target/restapi-0.0.1-SNAPSHOT.jar > app.log 2>&1 &"
-            }
+                sh "docker build --build-arg JAR_FILE_PATH_FROM_JENKINS=${JAR_FILE_FROM_JENKINS} -t service-one ."
+                }
             post{
                 always{echo "======Always======"}
-                success{echo "=====Run jar Successful======"}
-                failure{echo "=======Run jar Failed========"}
+                success{echo "=====Build Docker image Successful======"}
+                failure{echo "=======Build Docker image Failed========"}
             }
         }
     } // End of Stages
