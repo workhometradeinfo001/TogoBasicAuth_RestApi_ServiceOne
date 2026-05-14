@@ -90,8 +90,11 @@ pipeline {
         stage("Build Docker Image with jar"){
             steps{
                 sh """
-                docker build -f Dockerfile.dockerfile --build-arg JAR_FILE_PATH=RestApi_Service_One.jar -t service-one .
-                """
+                export DOCKER_BUILDKIT=1
+                            docker build -f Dockerfile.dockerfile \
+                              --build-arg JAR_FILE_PATH=RestApi_Service_One.jar \
+                              -t service-one .
+                            """
                 }
             post{
                 always{echo "======Always======"}
