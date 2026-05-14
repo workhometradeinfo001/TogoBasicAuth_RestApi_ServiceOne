@@ -105,6 +105,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>RestApi_Service_One</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

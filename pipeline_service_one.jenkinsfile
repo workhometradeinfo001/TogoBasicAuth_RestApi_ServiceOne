@@ -35,13 +35,13 @@ pipeline {
                 failure { echo "Env Print failure...." }
             }
         }
-        stage("Test Gitbub code") {
+        stage("Test Github code") {
             steps {
                 sh "mvn clean test"
             }
             post {
                 always { echo "========always========" }
-                success { echo "========Successfull mvn Test.========" }
+                success { echo "========Successful mvn Test.========" }
                 failure { echo "========Failed mvn Test.========" }
             }
         }
@@ -75,9 +75,24 @@ pipeline {
                 failure { echo "====++++Failed sonarqube check++++====" }
             }
         }
+        stage("Copy jar and past into with Dockerfile."){
+            steps{
+                sh """
+                    cp ${JAR_FILE_FROM_JENKINS} .
+                """
+            }
+            post{
+                always{echo "===Always Run====="}
+                success{echo "====Copy jar success====="}
+                failure{echo "====Failed to copy jar====="}
+            }
+        }
         stage("Build Docker Image with jar"){
             steps{
-                sh "docker build --build-arg JAR_FILE_PATH_FROM_JENKINS=${JAR_FILE_FROM_JENKINS} -t service-one ."
+                sh """
+                ls -la
+                docker build --build-arg JAR_FILE_PATH=RestApi_Service_One.jar -t service-one .
+                """
                 }
             post{
                 always{echo "======Always======"}

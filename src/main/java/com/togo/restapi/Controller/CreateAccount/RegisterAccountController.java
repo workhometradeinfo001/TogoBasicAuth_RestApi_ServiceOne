@@ -1,7 +1,6 @@
 package com.togo.restapi.Controller.CreateAccount;
 import com.togo.restapi.DTO.RegisterDTO.*;
 import com.togo.restapi.Entity.UserEntity.User;
-import com.togo.restapi.Services.RedisService.RedisService;
 import com.togo.restapi.Services.UserCreateService.UserCreateServiceSys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +40,7 @@ public class RegisterAccountController {
     }
 
     @PostMapping("/confirm-verification-code")
-    public ResponseEntity<HttpStatus> verficationMethod(@RequestBody VerifyEmailAddress emailCode){
+    public ResponseEntity<HttpStatus> verificationMethod(@RequestBody VerifyEmailAddress emailCode){
         boolean codeStatus = userCreateServiceSys.confirmationCode(emailCode.getEmail());
         if (codeStatus){
             return new ResponseEntity<>(HttpStatus.CREATED);
@@ -77,7 +76,7 @@ public class RegisterAccountController {
             Map<String, String> loginResponse = userCreateServiceSys.checkLoginCredential(loginDTO.getEmail(), loginDTO.getPassword());
             if (!loginResponse.isEmpty()){
                 loginResponse.put("Http", "302");
-                System.out.println(loginResponse);
+                log.info(loginResponse.toString());
                 return loginResponse;
             }
             loginResponse.put("Http", "404");
@@ -107,9 +106,5 @@ public class RegisterAccountController {
         }
     }
 
-    @GetMapping
-    public String CheckSystem(){
-        return "Ok";
-    }
 
 }
