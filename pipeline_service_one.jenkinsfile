@@ -100,7 +100,7 @@ pipeline {
                         if(statusCode == 0){
                         echo "Image are exits..."
                             sh """
-                                docker rm -f service-one
+                                docker rmi -f service-one
                                 export DOCKER_BUILDKIT=1
                                 docker build -f Dockerfile.dockerfile \
                                     --build-arg JAR_FILE_PATH=RestApi_Service_One.jar \
