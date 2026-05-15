@@ -126,27 +126,26 @@ pipeline {
         }
     stage("Run the image into local Machine"){
         steps{
-            script{
-               // 1. Check if the container exists at all
-                   def containerExists = sh(script: "docker inspect service-one-container", returnStatus: true)
-                   if (containerExists == 0) {
-                       echo "Found existing container. Stopping and removing..."
-                       // Use -f to stop AND remove in one go.
-                       // This clears the name so 'docker run' doesn't crash.
-                       sh "docker rm -f service-one-container"
-                   }
-                   // 2. Start the new container in detached mode (-d)
-                   // detached mode is required so the pipeline doesn't hang forever
-                   sh """
-                       docker run -d -p 8081:8081 \
-                        --name service_one_container \
-                        --env-file /home/programmer/genv/global.env \
-                        service-one
-                       echo "Waiting for Spring Boot to initialize..."
-                       sleep 30
-                       # Health check
-                       curl --fail http://localhost:8081/health || (docker logs service_one_container && exit 1)
-                   """
+            script {
+                // 1. Check and clean up old container
+                def containerExists = sh(script: "docker inspect service-one-container", returnStatus: true)
+                if (containerExists == 0) {
+                    echo "Found existing container. Stopping and removing..."
+                    sh "docker rm -f service-one-container"
+                }
+                // 2. Start the new container and check health
+                sh """
+                    docker run -d -p 8081:8081 \
+                      --name service-one-container \
+                      --env-file /home/programmer/genv/global.env \
+                      service-one
+
+                    echo "Waiting for Spring Boot to initialize..."
+                    sleep 30
+
+                    # Health check (Using correct hyphenated name for logs)
+                    curl --fail http://localhost:8081/health || (docker logs service-one-container && exit 1)
+                """
             }
         }
     }
