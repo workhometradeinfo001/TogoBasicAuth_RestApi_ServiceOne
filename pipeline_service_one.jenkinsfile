@@ -137,7 +137,7 @@ pipeline {
                 sh """
                     docker run -d -p 8081:8081 \
                       --name service-one-container \
-                      --env-file /home/programmer/genv/global.env \
+                      --env-file /opt/genv/global.env \
                       service-one
 
                     echo "Waiting for Spring Boot to initialize..."
