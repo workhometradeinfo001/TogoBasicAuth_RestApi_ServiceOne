@@ -115,7 +115,7 @@ pipeline {
                         echo "Waiting for app start..."
                         sh "sleep 30"
                         //Check the port is start or not...
-                        sh "curl --fail http://localhost:8080/health || (docker logs service_one-${env.BUILD_ID} && exit 1)"
+                        sh "curl --fail http://localhost:8081/health || (docker logs service_one-${env.BUILD_ID} && exit 1)"
                     }
                 }
             }
