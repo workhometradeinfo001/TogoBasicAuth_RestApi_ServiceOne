@@ -113,6 +113,11 @@ pipeline {
                     }
                 }
             }
+            post{
+                always{echo "====Always run======"}
+                success{echo "======Test docker image Successful======"}
+                failure{echo "======Test docker image fail======="}
+            }
         }
     } // End of Stages
 
