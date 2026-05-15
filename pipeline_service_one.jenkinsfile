@@ -1,4 +1,3 @@
-def app
 pipeline {
     agent any
     tools {
@@ -111,14 +110,20 @@ pipeline {
         }
         stage("Test docker spring boot image internal docker engine"){
             steps{
-                script{
-                    app.withRun("-p 8081:8081 --name service_one-${env.BUILD_ID}") {c ->
-                        echo "Waiting for app start..."
-                        sh "sleep 30"
-                        //Check the port is start or not...
-                        sh "curl --fail http://localhost:8081/health || (docker logs service_one-${env.BUILD_ID} && exit 1)"
-                    }
-                }
+                sh """
+                    # 1. Kill any old container with the same name
+                    docker rm -f service-one-container || true
+
+                    # 2. Run the image in detached mode
+                    docker run -d -p 8081:8081 --name service-one-container service-one:latest
+
+                    # 3. Wait and Verify
+                    sleep 30
+                    curl --fail http://localhost:8081/health
+
+                    # 4. Cleanup (Stop the container after test)
+                    docker stop service-one-container
+                """
             }
             post{
                 always{echo "====Always run======"}
