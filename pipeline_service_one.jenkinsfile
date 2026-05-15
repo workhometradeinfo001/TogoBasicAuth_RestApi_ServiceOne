@@ -90,11 +90,17 @@ pipeline {
         stage("Build Docker Image with jar"){
             steps{
                 sh """
-                export DOCKER_BUILDKIT=1
-                            docker build -f Dockerfile.dockerfile \
-                              --build-arg JAR_FILE_PATH=RestApi_Service_One.jar \
-                              -t service-one .
-                            """
+                # 1. Clean up any old container using the same name
+                    docker rm -f service-one || true
+
+                    # 2. Set BuildKit for faster/modern builds
+                    export DOCKER_BUILDKIT=1
+
+                    # 3. Build the new image
+                    docker build -f Dockerfile.dockerfile \
+                      --build-arg JAR_FILE_PATH=RestApi_Service_One.jar \
+                      -t service-one .
+                    """
                 }
             post{
                 always{echo "======Always======"}
