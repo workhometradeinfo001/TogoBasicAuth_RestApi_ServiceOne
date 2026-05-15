@@ -138,7 +138,10 @@ pipeline {
                    // 2. Start the new container in detached mode (-d)
                    // detached mode is required so the pipeline doesn't hang forever
                    sh """
-                       docker run -d -p 8081:8081 --name service_one_container service-one
+                       docker run -d -p 8081:8081 \
+                        --name service_one_container \
+                        --env-file /home/programmer/genv/global.env \
+                        service-one
                        echo "Waiting for Spring Boot to initialize..."
                        sleep 30
                        # Health check
