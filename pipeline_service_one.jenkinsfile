@@ -124,6 +124,29 @@ pipeline {
                 failure{echo "=======Build Docker image Failed========"}
             }
         }
+    stage("Run the image into local Machine"){
+        steps{
+            script{
+               // 1. Check if the container exists at all
+                   def containerExists = sh(script: "docker inspect service-one-container", returnStatus: true)
+                   if (containerExists == 0) {
+                       echo "Found existing container. Stopping and removing..."
+                       // Use -f to stop AND remove in one go.
+                       // This clears the name so 'docker run' doesn't crash.
+                       sh "docker rm -f service-one-container"
+                   }
+                   // 2. Start the new container in detached mode (-d)
+                   // detached mode is required so the pipeline doesn't hang forever
+                   sh """
+                       docker run -d -p 8081:8081 --name service_one_container service-one
+                       echo "Waiting for Spring Boot to initialize..."
+                       sleep 30
+                       # Health check
+                       curl --fail http://localhost:8081/health || (docker logs service_one_container && exit 1)
+                   """
+            }
+        }
+    }
 
     } // End of Stages
 
