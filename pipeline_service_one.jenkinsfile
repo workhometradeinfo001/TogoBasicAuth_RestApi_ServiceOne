@@ -102,6 +102,18 @@ pipeline {
                 failure{echo "=======Build Docker image Failed========"}
             }
         }
+        stage("Test docker spring boot image internal docker engine"){
+            steps{
+                script{
+                    app.withRun("-p 8081:8081 --name service_one-${env.BUILD_ID}") {c ->
+                        echo "Waiting for app start..."
+                        sh "sleep 30"
+                        //Check the port is start or not...
+                        sh "curl --fail http://localhost:8080/health || (docker logs service_one-${env.BUILD_ID} && exit 1)"
+                    }
+                }
+            }
+        }
     } // End of Stages
 
     post {
