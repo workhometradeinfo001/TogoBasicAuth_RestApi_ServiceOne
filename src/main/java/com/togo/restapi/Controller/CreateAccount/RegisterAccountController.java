@@ -106,5 +106,10 @@ public class RegisterAccountController {
         }
     }
 
+    @GetMapping("/health-check")
+    public String returnHealthCheck(){
+        return "Work perfectly..............***********";
+    }
+
 
 }
