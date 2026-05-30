@@ -141,6 +141,7 @@ pipeline {
                       service-one
 
                     echo "Waiting for Spring Boot to initialize..."
+                    sleep 30
 
                     # Health check (Using correct hyphenated name for logs)
                     curl --fail http://localhost:8081/register/health-check || (docker logs service-one-container && exit 1)
