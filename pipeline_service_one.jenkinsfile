@@ -141,7 +141,6 @@ pipeline {
                       service-one
 
                     echo "Waiting for Spring Boot to initialize..."
-                    sleep 30
 
                     # Health check (Using correct hyphenated name for logs)
                     curl --fail http://localhost:8081/register/health-check || (docker logs service-one-container && exit 1)
@@ -157,15 +156,14 @@ pipeline {
     }
     stage('Deploy to Azure') {
         steps {
-            script {
-                // 1. Tag the fresh image we just built
-                sh 'docker tag service-one togoregistry82197.azurecr.io/service-one:latest'
-
-                // 2. Push it to your private registry vault
-                sh 'docker push togoregistry82197.azurecr.io/service-one:latest'
-
-                // 3. Force your single togo-container app to pull the new layers
-                sh 'az containerapp update --name togo-container --resource-group alamin --image togoregistry82197.azurecr.io/service-one:latest --revision-suffix v2'
+// This block automatically logs docker in before executing the commands inside it
+                    withCredentials([usernamePassword(credentialsId: 'ACR',
+                                                      usernameVariable: 'ACR_USER',
+                                                      passwordVariable: 'ACR_PASS')]) {
+                        sh 'docker login togoregistry82197.azurecr.io -u $ACR_USER -p $ACR_PASS'
+                        sh 'docker tag service-one togoregistry82197.azurecr.io/service-one:latest'
+                        sh 'docker push togoregistry82197.azurecr.io/service-one:latest'
+                        sh 'az containerapp update --name togo-container --resource-group alamin --image togoregistry82197.azurecr.io/service-one:latest --revision-suffix v5'
             }
         }
         post{
