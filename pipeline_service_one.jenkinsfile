@@ -148,6 +148,31 @@ pipeline {
                 """
             }
         }
+        post{
+        always{echo "======Always========"}
+        success{echo "Successful run image into local machine........."}
+        failure{echo "======File run into local machine========="}
+        }
+
+    }
+    stage('Deploy to Azure') {
+        steps {
+            script {
+                // 1. Tag the fresh image we just built
+                sh 'docker tag service-one togoregistry82197.azurecr.io/service-one:latest'
+
+                // 2. Push it to your private registry vault
+                sh 'docker push togoregistry82197.azurecr.io/service-one:latest'
+
+                // 3. Force your single togo-container app to pull the new layers
+                sh 'az containerapp update --name togo-container --resource-group alamin --image togoregistry82197.azurecr.io/service-one:latest --revision-suffix v2'
+            }
+        }
+        post{
+            always{ echo "===Always====="}
+            success{echo "======push image to azure container successfully======="}
+            failure{echo "====faile to push image azure container======="}
+        }
     }
 
     } // End of Stages
