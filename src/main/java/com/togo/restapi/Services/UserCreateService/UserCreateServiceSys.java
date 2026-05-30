@@ -160,10 +160,11 @@ public class UserCreateServiceSys {
         SecretKey key = Keys.hmacShaKeyFor(signWithSecret.getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
                 .header()
-                .add("typ", "LOGIN_JWT") // Use 'typ'
+                .add("typ", "LOGIN_JWT")// Use 'typ'
                 .and()
                 .subject(email)
                 .claim("userId", id)
+                .claim("email", email)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 86400000)) // 24 hours
                 .signWith(key) // Ensure 'key' is a SecretKey object, not a String
