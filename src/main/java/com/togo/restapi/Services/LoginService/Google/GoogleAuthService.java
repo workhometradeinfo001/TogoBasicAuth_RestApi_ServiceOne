@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -107,9 +108,9 @@ public class GoogleAuthService {
         }
     }
 
-    public String checkUserOnDB(Map<String, Object> userObj) {
+    public boolean checkUserOnDB(Map<String, Object> userObj) {
         if (userObj == null || userObj.isEmpty()) {
-            return null;
+            return false;
         }
         String email = (String) userObj.get("email");
         // 1. Look for the user by email
@@ -120,19 +121,14 @@ public class GoogleAuthService {
         // 2. If user does NOT exist, save them
         if (existingUser == null) {
             User saveUser = new User();
-            if (userObj.get("given_name") == null){
-                saveUser.setFirstName("Given Name");
-            }else {
-                saveUser.setFirstName((String) userObj.get("given_name"));
-            }
-            if (userObj.get("family_name") == null){
-                saveUser.setLastName("Family Name");
-            }else {
-                saveUser.setLastName((String) userObj.get("family_name"));
-            }
+            String userId = userObj.containsKey("sub") && userObj.get("sub") != null
+                    ? userObj.get("sub").toString(): UUID.randomUUID().toString();
+            saveUser.setId(userId);
+            saveUser.setFirstName((String) userObj.getOrDefault("given_name", "Given Name"));
+            saveUser.setLastName((String) userObj.getOrDefault("family_name", "Family Name"));
             if (userObj.get("phone_number") == null){
-                saveUser.setPhoneNumber("No_Number");
-                saveUser.setNumCountryCode("No_CC");
+                saveUser.setPhoneNumber(UUID.randomUUID().toString());
+                saveUser.setNumCountryCode(UUID.randomUUID().toString());
             }else {
                 String fullNbr = (String) userObj.get("phone_number");
                 Map<String, String> stringStringMap = parsePhone.parsePhone(fullNbr);
@@ -146,12 +142,12 @@ public class GoogleAuthService {
             randomPassword = UUID.randomUUID().toString();
             saveUser.setPassword(passwordEncoder.encode(randomPassword));
             sendPasswordToMail(email, randomPassword);
-            User save = userDetailsImlRepo.save(saveUser);
-            return userService.createJwtNewUser(save.getId(), save.getEmail());
+            userDetailsImlRepo.save(saveUser);
+            return true;
             // Successfully registered new user
         }
         // 3. User already exists in DB
-        return null;
+        return false;
     }
     public void sendPasswordToMail(String email, String password){
         SimpleMailMessage mailMessage = new SimpleMailMessage();

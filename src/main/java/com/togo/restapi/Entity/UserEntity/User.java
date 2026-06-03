@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @Document(collection = "togo_user_database")
-@Data
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityScan
