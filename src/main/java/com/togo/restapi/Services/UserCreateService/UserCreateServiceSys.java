@@ -75,14 +75,15 @@ public class UserCreateServiceSys {
             return Optional.empty();
         }
     }
-    public String createJwtNewUser(String mongoId, String email){
+    public String createJwtNewUser(String mongoId, String givenEmail){
         SecretKey key = Keys.hmacShaKeyFor(signWithSecret.getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
                 .header()
                 .add("typ", "DATA_TRANSFER_JWT")
                 .and()
-                .subject(email)
+                .subject(givenEmail)
                 .claim("mongoUserId", mongoId)
+                .claim("email", givenEmail)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis()+86400000))
                 .signWith(key)
